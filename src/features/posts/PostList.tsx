@@ -1,31 +1,39 @@
-import React from "react";
-import { useAppSelector } from "../../app/hook";
-import PostAuthor from "./PostAuthor";
-import TimeAgo from "./TimeAgo";
-import ReactionButtons from "./ReactionButtons";
+import React, { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../../app/hook";
+
+import { fetchPosts } from "./postsSlice";
+import PostExcerpt from "./PostExcerpt";
 
 export const PostList = () => {
+  const dispatch = useAppDispatch();
   const posts = useAppSelector((state) => state.posts);
+  const postsStatus = useAppSelector((state) => state.posts.status);
+  const error = useAppSelector((state) => state.posts.error);
 
-  const orderedPosts = posts
-    .slice()
-    .sort((a, b) => b.date.localeCompare(a.date));
+  useEffect(() => {
+    if (postsStatus === "idle") {
+      dispatch(fetchPosts());
+    }
+  }, [postsStatus, dispatch]);
 
-  const renderPosts = orderedPosts.map((post) => (
-    <article key={post.id}>
-      <h3>{post.title}</h3>
-      <p>{post.content.substring(0, 100)}</p>
-      <p className="postContent">
-        <PostAuthor userId={String(post.userId)} />
-        <TimeAgo timestamp={post.date} />
-        <ReactionButtons post={post} />
-      </p>
-    </article>
-  ));
+  let content;
+  if (postsStatus === "loading") {
+    content = <p>loading</p>;
+  } else if (postsStatus === "succeeded") {
+    const orderedPosts = posts.posts
+      .slice()
+      .sort((a, b) => b.date.localeCompare(a.date));
+    content = orderedPosts.map((post, index) => (
+      <PostExcerpt post={post} key={index} />
+    ));
+  } else if (postsStatus === "failed") {
+    content = <p>{error}</p>;
+  }
+
   return (
     <section>
       <h2>Posts</h2>
-      {renderPosts}
+      {content}
     </section>
   );
 };

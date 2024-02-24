@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { postAdded } from "./postsSlice";
+import { addNewPost, postAdded } from "./postsSlice";
 import { useAppDispatch, useAppSelector } from "../../app/hook";
 
 const AddPostForm = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [userId, setUserId] = useState("");
+  const [addRequestStatus, setAddRequestStatus] = useState("idle");
 
   const dispatch = useAppDispatch();
 
@@ -22,20 +23,28 @@ const AddPostForm = () => {
     target: { value: React.SetStateAction<string> };
   }) => setUserId(e.target.value);
 
-  const canSave = Boolean(userId) && Boolean(title) && Boolean(content);
+  const canSave =
+    [title, content, userId].every(Boolean) && addRequestStatus === "idle";
 
   const onSavePostClicked = () => {
-    if (title && content) {
-      dispatch(
-        postAdded({
-          title,
-          content,
-          userId,
-        })
-      );
+    if (canSave) {
+      try {
+        setAddRequestStatus("pending");
+        dispatch(
+          addNewPost({
+            title,
+            body: content,
+            userId,
+          })
+        ).unwrap();
 
-      setTitle("");
-      setContent("");
+        setTitle("");
+        setContent("");
+      } catch (error) {
+        console.log("Failed to save the post", error);
+      } finally {
+        setAddRequestStatus("idle");
+      }
     }
   };
 

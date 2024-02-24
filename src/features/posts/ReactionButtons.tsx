@@ -1,9 +1,9 @@
 import React from "react";
-import { PostState, reactionAdded } from "./postsSlice";
+import { PostFormat, reactionAdded } from "./postsSlice";
 import { useAppDispatch } from "../../app/hook";
 
 interface ReactionButtonsInterface {
-  post: PostState;
+  post: PostFormat;
 }
 const reactionEmoji = {
   thumbsUp: "👍",
